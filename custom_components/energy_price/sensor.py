@@ -7,12 +7,12 @@ from homeassistant.helpers.entity import Entity
 _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    add_entities([EnergyPriceSensor(), LowestCumulativePriceSensor(), HighestCumulativePriceSensor()])
+    add_entities([BojkasEnergyPriceSensor(), BojkasLowestCumulativePriceSensor(), BojkasHighestCumulativePriceSensor()])
 
-class EnergyPriceSensor(Entity):
+class BojkasEnergyPriceSensor(Entity):
 
     def __init__(self):
-        self._name = "energy_price_bojkas"
+        self._name = "bojkas_energy_price"
         self._state = None
         self._attributes = {}
         self.update()
@@ -62,10 +62,10 @@ class EnergyPriceSensor(Entity):
         else:
             _LOGGER.error("Failed to update energy price.")
             
-class LowestCumulativePriceSensor(Entity):
+class BojkasLowestCumulativePriceSensor(Entity):
 
     def __init__(self):
-        self._name = "2h_lowest_cumulative_price"
+        self._name = "bojkas_2h_lowest_cumulative_price"
         self._state = None
         self.update()
 
@@ -78,7 +78,6 @@ class LowestCumulativePriceSensor(Entity):
         return self._state
 
     def update(self):
-        # ... (same update code as in the EnergyPriceSensor class)
         url = "https://www.ote-cr.cz/cs/kratkodobe-trhy/elektrina/denni-trh/@@chart-data"
         response = requests.get(url)
 
@@ -116,12 +115,11 @@ class LowestCumulativePriceSensor(Entity):
 
         # Set the state of the sensor
         self._state = lowest_hours[0]
-
         
-class HighestCumulativePriceSensor(Entity):
+class BojkasHighestCumulativePriceSensor(Entity):
 
     def __init__(self):
-        self._name = "2h_highest_cumulative_price"
+        self._name = "bojkas_2h_highest_cumulative_price"
         self._state = None
         self.update()
 
@@ -134,7 +132,6 @@ class HighestCumulativePriceSensor(Entity):
         return self._state
 
     def update(self):
-        # ... (same update code as in the EnergyPriceSensor class)
         url = "https://www.ote-cr.cz/cs/kratkodobe-trhy/elektrina/denni-trh/@@chart-data"
         response = requests.get(url)
 
