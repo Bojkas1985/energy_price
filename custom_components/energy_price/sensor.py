@@ -46,7 +46,7 @@ class EnergyPriceSensor(Entity):
                 price = float(point["y"])
                 hours_prices[hour] = price
 
-            self._state = hours_prices.get(datetime.now().hour-1)
+            self._state = hours_prices.get(datetime.now().hour+1)
             self._attributes = {
                 "hourly_prices": hours_prices,
             }
@@ -72,7 +72,7 @@ class LowestCumulativePriceSensor(Entity):
     def update(self):
         hours_prices = self._energy_price_sensor.extra_state_attributes["hourly_prices"]
         cumulative_prices = {}
-        for hour in range(0, 23):
+        for hour in range(1, 24):
             cumulative_prices[hour] = hours_prices.get(hour, 0) + hours_prices.get(hour + 1, 0)
 
         lowest_hours = sorted(cumulative_prices, key=cumulative_prices.get)[:2]
@@ -97,7 +97,7 @@ class HighestCumulativePriceSensor(Entity):
     def update(self):
         hours_prices = self._energy_price_sensor.extra_state_attributes["hourly_prices"]
         cumulative_prices = {}
-        for hour in range(0, 23):
+        for hour in range(1, 24):
             cumulative_prices[hour] = hours_prices.get(hour, 0) + hours_prices.get(hour + 1, 0)
 
         highest_hours = sorted(cumulative_prices, key=cumulative_prices.get, reverse=True)[:2]
