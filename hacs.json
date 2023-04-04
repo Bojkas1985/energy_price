@@ -1,6 +1,6 @@
 {
   "name": "Energy Price",
   "domains": ["sensor"],
-  "documentation": "https://github.com/yourusername/energy_price_custom_component/blob/main/README.md",
-  "codeowners": ["@yourusername"]
+  "documentation": "https://github.com/Bojkas1985/energy_price/README.md",
+  "codeowners": ["@Bojkas1985"]
 }
