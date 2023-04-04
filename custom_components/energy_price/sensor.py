@@ -1,44 +1,34 @@
 import logging
 import requests
 import json
-from datetime import timedelta
+from datetime import datetime
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "energy_price"
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([EnergyPriceSensor()])
 
-
 class EnergyPriceSensor(Entity):
 
     def __init__(self):
+        self._name = "Energy Price"
         self._state = None
         self._attributes = {}
         self.update()
 
     @property
     def name(self):
-        return "Energy Price"
+        return self._name
 
     @property
     def state(self):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         return self._attributes
 
-    @property
-    def unit_of_measurement(self):
-        return "CZK/MWh"
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         url = "https://www.ote-cr.cz/cs/kratkodobe-trhy/elektrina/denni-trh/@@chart-data"
         response = requests.get(url)
@@ -46,6 +36,7 @@ class EnergyPriceSensor(Entity):
         if response.status_code == 200:
             data = json.loads(response.text)
             hours_prices = {}
+
             for point in data["data"]["dataLine"][1]["point"]:
                 hour = int(point["x"])
                 price = float(point["y"])
@@ -54,4 +45,4 @@ class EnergyPriceSensor(Entity):
             self._state = hours_prices.get(datetime.now().hour)
             self._attributes = hours_prices
         else:
-            _LOGGER.error("Failed to fetch data.")
+            _LOGGER.error("Failed to update energy price.")
