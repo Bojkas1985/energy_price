@@ -6,6 +6,20 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
+def get_eur_czk_exchange_rate():
+    url = "https://www.cnb.cz/cs/financni-trhy/devizovy-trh/kurzy-devizoveho-trhu/kurzy-devizoveho-trhu/denni_kurz.txt"
+    response = requests.get(url)
+    if response.status_code == 200:
+        lines = response.text.split("\n")
+        for line in lines:
+            if "EUR" in line:
+                exchange_rate = float(line.split("|")[4].replace(",", "."))
+                return exchange_rate
+    return None
+
+def convert_to_czk(eur_amount, exchange_rate):
+    return eur_amount * exchange_rate
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     energy_price_sensor = EnergyPriceSensor()
     energy_price_sensor.update()
@@ -36,6 +50,11 @@ class EnergyPriceSensor(Entity):
         return self._attributes
 
     def update(self):
+        exchange_rate = get_eur_czk_exchange_rate()
+        if exchange_rate is None:
+            _LOGGER.error("Failed to update exchange rate.")
+            return
+
         url = "https://www.ote-cr.cz/cs/kratkodobe-trhy/elektrina/denni-trh/@@chart-data"
         response = requests.get(url)
 
@@ -46,7 +65,9 @@ class EnergyPriceSensor(Entity):
             for point in data["data"]["dataLine"][1]["point"]:
                 hour = int(point["x"])
                 price = float(point["y"])
-                hours_prices[hour] = price
+                czk_price = convert_to_czk(price, exchange_rate)
+                if hour not in hours_prices or hours_prices[hour] != czk_price:
+                    hours_prices[hour] = czk_price
 
             self._state = hours_prices.get(datetime.now().hour+1)
             self._attributes = {
