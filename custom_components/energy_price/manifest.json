@@ -1,9 +1,10 @@
 {
   "domain": "energy_price",
   "name": "Energy Price",
-  "documentation": "",
-  "issue_tracker": "",
+  "documentation": "https://github.com/Bojkas1985/energy_price_custom_component",
   "dependencies": [],
-  "codeowners": [],
+  "codeowners": ["@Bojkas1985"],
+  "version": "1.0.0",
+  "homeassistant": "2021.6.0",
   "requirements": ["requests"]
 }
