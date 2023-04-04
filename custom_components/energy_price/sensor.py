@@ -16,7 +16,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class EnergyPriceSensor(Entity):
 
     def __init__(self):
-        self._name = "energy_price_bojkas_ib"
+        self._name = "energy_price_ib"
         self._state = None
         self._attributes = {}
         self.update()
