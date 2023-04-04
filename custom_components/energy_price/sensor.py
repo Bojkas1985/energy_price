@@ -18,7 +18,8 @@ def get_eur_czk_exchange_rate():
     return None
 
 def convert_to_czk(eur_amount, exchange_rate):
-    return eur_amount * exchange_rate
+    czk_amount = eur_amount * exchange_rate
+    return round(czk_amount / 1000, 2)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     energy_price_sensor = EnergyPriceSensor()
