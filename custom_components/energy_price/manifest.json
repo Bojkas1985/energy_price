@@ -1,0 +1,9 @@
+{
+  "domain": "energy_price",
+  "name": "Energy Price",
+  "documentation": "",
+  "issue_tracker": "",
+  "dependencies": [],
+  "codeowners": [],
+  "requirements": ["requests"]
+}
