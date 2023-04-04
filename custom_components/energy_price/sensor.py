@@ -48,16 +48,10 @@ class BojkasEnergyPriceSensor(Entity):
             for hour in range(0, 23):
                 cumulative_prices[hour] = hours_prices.get(hour, 0) + hours_prices.get(hour + 1, 0)
 
-            # Find the two hours with the lowest and highest cumulative prices
-            lowest_hours = sorted(cumulative_prices, key=cumulative_prices.get)[:2]
-            highest_hours = sorted(cumulative_prices, key=cumulative_prices.get, reverse=True)[:2]
-
             # Set the state and attributes of the sensor
-            self._state = hours_prices.get(datetime.now().hour)
+            self._state = hours_prices.get(datetime.now().hour - 1)
             self._attributes = {
-                "hourly_prices": hours_prices,
-                "lowest_cumulative_hours": lowest_hours,
-                "highest_cumulative_hours": highest_hours
+                "hourly_prices": hours_prices
             }
         else:
             _LOGGER.error("Failed to update energy price.")
@@ -114,7 +108,7 @@ class BojkasLowestCumulativePriceSensor(Entity):
         lowest_hours = sorted(cumulative_prices, key=cumulative_prices.get)[:2]
 
         # Set the state of the sensor
-        self._state = lowest_hours[0]
+        self._state = lowest_hours[0] - 1
         
 class BojkasHighestCumulativePriceSensor(Entity):
 
@@ -168,4 +162,4 @@ class BojkasHighestCumulativePriceSensor(Entity):
         highest_hours = sorted(cumulative_prices, key=cumulative_prices.get, reverse=True)[:2]
 
         # Set the state of the sensor
-        self._state = highest_hours[0]
+        self._state = highest_hours[0] - 1
