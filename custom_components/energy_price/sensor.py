@@ -7,7 +7,12 @@ from homeassistant.helpers.entity import Entity
 _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    add_entities([EnergyPriceSensor(), LowestCumulativePriceSensor(), HighestCumulativePriceSensor()])
+    entities = [EnergyPriceSensor()]
+    cumulative_entities = [LowestCumulativePriceSensor(), HighestCumulativePriceSensor()]
+    for entity in cumulative_entities:
+        entity.update()
+    entities.extend(cumulative_entities)
+    add_entities(entities)
 
 class EnergyPriceSensor(Entity):
 
@@ -42,7 +47,7 @@ class EnergyPriceSensor(Entity):
                 price = float(point["y"])
                 hours_prices[hour] = price
 
-            self._state = hours_prices.get(datetime.now().hour)
+            self._state = hours_prices.get(datetime.now().hour)-1
             self._attributes = {
                 "hourly_prices": hours_prices,
             }
@@ -60,7 +65,7 @@ class LowestCumulativePriceSensor(EnergyPriceSensor):
         if self._attributes:
             hours_prices = self._attributes["hourly_prices"]
             cumulative_prices = {}
-            for hour in range(0, 23):
+            for hour in range(1, 24):
                 cumulative_prices[hour] = hours_prices.get(hour, 0) + hours_prices.get(hour + 1, 0)
 
             lowest_hours = sorted(cumulative_prices, key=cumulative_prices.get)[:2]
@@ -77,7 +82,7 @@ class HighestCumulativePriceSensor(EnergyPriceSensor):
         if self._attributes:
             hours_prices = self._attributes["hourly_prices"]
             cumulative_prices = {}
-            for hour in range(0, 23):
+            for hour in range(1, 24):
                 cumulative_prices[hour] = hours_prices.get(hour, 0) + hours_prices.get(hour + 1, 0)
 
             highest_hours = sorted(cumulative_prices, key=cumulative_prices.get, reverse=True)[:2]
