@@ -7,12 +7,12 @@ from homeassistant.helpers.entity import Entity
 _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    add_entities([EnergyPriceSensor()])
+    add_entities([EnergyPriceSensor(), LowestCumulativePriceSensor(), HighestCumulativePriceSensor()])
 
 class EnergyPriceSensor(Entity):
 
     def __init__(self):
-        self._name = "energy_price_bojkas"
+        self._name = "energy_price_bojkas_ib"
         self._state = None
         self._attributes = {}
         self.update()
@@ -37,27 +37,48 @@ class EnergyPriceSensor(Entity):
             data = json.loads(response.text)
             hours_prices = {}
 
-            # Get all hourly prices and store them in a dictionary
             for point in data["data"]["dataLine"][1]["point"]:
                 hour = int(point["x"])
                 price = float(point["y"])
                 hours_prices[hour] = price
 
-            # Calculate cumulative prices for each consecutive hour pair
+            self._state = hours_prices.get(datetime.now().hour)
+            self._attributes = {
+                "hourly_prices": hours_prices,
+            }
+        else:
+            _LOGGER.error("Failed to update energy price.")
+
+class LowestCumulativePriceSensor(EnergyPriceSensor):
+
+    def __init__(self):
+        super().__init__()
+        self._name = "2h_lowest_cumulative_price_ib"
+
+    def update(self):
+        super().update()
+        if self._attributes:
+            hours_prices = self._attributes["hourly_prices"]
             cumulative_prices = {}
             for hour in range(0, 23):
                 cumulative_prices[hour] = hours_prices.get(hour, 0) + hours_prices.get(hour + 1, 0)
 
-            # Find the two hours with the lowest and highest cumulative prices
             lowest_hours = sorted(cumulative_prices, key=cumulative_prices.get)[:2]
-            highest_hours = sorted(cumulative_prices, key=cumulative_prices.get, reverse=True)[:2]
+            self._state = lowest_hours[0]
 
-            # Set the state and attributes of the sensor
-            self._state = hours_prices.get(datetime.now().hour)
-            self._attributes = {
-                "hourly_prices": hours_prices,
-                "lowest_cumulative_hours": lowest_hours,
-                "highest_cumulative_hours": highest_hours
-            }
-        else:
-            _LOGGER.error("Failed to update energy price.")
+class HighestCumulativePriceSensor(EnergyPriceSensor):
+
+    def __init__(self):
+        super().__init__()
+        self._name = "2h_highest_cumulative_price_ib"
+
+    def update(self):
+        super().update()
+        if self._attributes:
+            hours_prices = self._attributes["hourly_prices"]
+            cumulative_prices = {}
+            for hour in range(0, 23):
+                cumulative_prices[hour] = hours_prices.get(hour, 0) + hours_prices.get(hour + 1, 0)
+
+            highest_hours = sorted(cumulative_prices, key=cumulative_prices.get, reverse=True)[:2]
+            self._state = highest_hours[0]
