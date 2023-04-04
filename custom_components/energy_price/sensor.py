@@ -7,12 +7,11 @@ from homeassistant.helpers.entity import Entity
 _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    entities = [EnergyPriceSensor()]
-    cumulative_entities = [LowestCumulativePriceSensor(), HighestCumulativePriceSensor()]
-    for entity in cumulative_entities:
-        entity.update()
-    entities.extend(cumulative_entities)
-    add_entities(entities)
+    energy_price_sensor = EnergyPriceSensor()
+    energy_price_sensor.update()
+    lowest_cumulative_price_sensor = LowestCumulativePriceSensor(energy_price_sensor.attributes)
+    highest_cumulative_price_sensor = HighestCumulativePriceSensor(energy_price_sensor.attributes)
+    add_entities([energy_price_sensor, lowest_cumulative_price_sensor, highest_cumulative_price_sensor])
 
 class EnergyPriceSensor(Entity):
 
@@ -54,35 +53,53 @@ class EnergyPriceSensor(Entity):
         else:
             _LOGGER.error("Failed to update energy price.")
 
-class LowestCumulativePriceSensor(EnergyPriceSensor):
+class LowestCumulativePriceSensor(Entity):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, attributes):
         self._name = "2h_lowest_cumulative_price_ib"
+        self._state = None
+        self._attributes = attributes
+        self.update()
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def state(self):
+        return self._state
 
     def update(self):
-        super().update()
         if self._attributes:
             hours_prices = self._attributes["hourly_prices"]
             cumulative_prices = {}
-            for hour in range(1, 24):
+            for hour in range(0, 23):
                 cumulative_prices[hour] = hours_prices.get(hour, 0) + hours_prices.get(hour + 1, 0)
 
             lowest_hours = sorted(cumulative_prices, key=cumulative_prices.get)[:2]
             self._state = lowest_hours[0]
 
-class HighestCumulativePriceSensor(EnergyPriceSensor):
+class HighestCumulativePriceSensor(Entity):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, attributes):
         self._name = "2h_highest_cumulative_price_ib"
+        self._state = None
+        self._attributes = attributes
+        self.update()
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def state(self):
+        return self._state
 
     def update(self):
-        super().update()
         if self._attributes:
             hours_prices = self._attributes["hourly_prices"]
             cumulative_prices = {}
-            for hour in range(1, 24):
+            for hour in range(0, 23):
                 cumulative_prices[hour] = hours_prices.get(hour, 0) + hours_prices.get(hour + 1, 0)
 
             highest_hours = sorted(cumulative_prices, key=cumulative_prices.get, reverse=True)[:2]
