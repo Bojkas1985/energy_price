@@ -47,7 +47,7 @@ class EnergyPriceSensor(Entity):
                 price = float(point["y"])
                 hours_prices[hour] = price
 
-            self._state = hours_prices.get(datetime.now().hour)-1
+            self._state = hours_prices.get(datetime.now().hour-1)
             self._attributes = {
                 "hourly_prices": hours_prices,
             }
